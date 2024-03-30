@@ -1,8 +1,8 @@
 # Gharbhadma project server
 
-Description:
+Descriptions:
  
-    This is the backend portion of my website which is about providing nepali people with ease in navigating  rental homes, finding peers to join accomodate a common rental home. setting alerts for flat with desired specifications and many more features which current sites don't provide.
+This is the backend portion of my website which is about providing nepali people with ease in navigating  rental homes, finding peers to join accomodate a common rental home. setting alerts for flat with desired specifications and many more features which current sites don't provide.
 
 ## Setup
 
