@@ -1,5 +1,16 @@
-version: '3'
+version: '3.8'
+
 services:
+  dev-db:
+    image: mysql:8
+    ports:
+      - 3307:3306
+    environment:
+      MYSQL_ROOT_PASSWORD: 123
+      MYSQL_DATABASE: nest
+    volumes:
+      - ./dev-db-data:/var/lib/mysql
+      
   go-server:
     build:
       context: .
