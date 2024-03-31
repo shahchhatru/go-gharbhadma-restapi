@@ -12,6 +12,8 @@ COPY code/ ./code/
 
 # Install GoFiber framework
 RUN go get -u github.com/gofiber/fiber/v2
+RUN go get -u gorm.io/gorm
+RUN go get -u gorm.io/driver/mysql
 RUN go install github.com/cosmtrek/air@latest
 
 # Expose port 8080 to the outside world
