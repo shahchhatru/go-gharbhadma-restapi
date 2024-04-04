@@ -1,11 +1,9 @@
 package main
 
 import (
-    "gorm.io/gorm"
-    "gorm.io/driver/mysql"
-    "log"
     "github.com/gofiber/fiber/v2"
     "myapp/code/user"
+    "myapp/code/db"
 )
 
 func home(c *fiber.Ctx) error{
@@ -13,36 +11,30 @@ func home(c *fiber.Ctx) error{
 
 }
 
+func Routers(app *fiber.App){
+    app.Get("/users",user.GetUsers)
+    app.Get("/user/:id",user.GetUser)
+    app.Post("/user",user.SaveUser)
+    app.Delete("/user/:id",user.DeleteUser)
+    app.Put("/user/:id",user.UpdateUser)
+
+
+
+
+}
+
 func main() {
+   
+
+    db.InitialMigration()
+    db.DB.AutoMigrate(&user.User{})
+    // You can now use the 'db' object to interact with the database
+    // For example, you can define your models and perform CRUD operations
     app:=fiber.New()
 
     app.Get("/",home)
-    // MySQL connection string
-    dsn := "root:123@tcp(dev-db:3306)/nest?charset=utf8mb4&parseTime=True&loc=Local"
+    Routers(app)
 
-    // Open a connection to the database
-    
-    
-    db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{})
-    if err != nil {
-        log.Fatalf("Error connecting to database: %v", err)
-    }
-    
-
-    // Ping the database to check connectivity
-    sqlDB, err := db.DB()
-    if err != nil {
-        log.Fatalf("Error getting underlying SQL database: %v", err)
-    }
-
-    db.AutoMigrate(&user.User{})
-    defer sqlDB.Close()
-
-    // Database connection successful
-    log.Println("Connected to MySQL database")
-
-    // You can now use the 'db' object to interact with the database
-    // For example, you can define your models and perform CRUD operations
 
     app.Listen(":8080")
 }
