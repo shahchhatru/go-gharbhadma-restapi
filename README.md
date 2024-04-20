@@ -27,3 +27,19 @@ docker-compose up
 docker-compose down
 ```
 
+
+### urls or routes
+
+## signup
+
+![Signup](./imgs/singupurl.png)
+
+## login
+
+![Login](./imgs/loginimage.png)
+
+## refresh token url
+
+![refreshtoken](./imgs/refreshtokenimg.png)
+
+

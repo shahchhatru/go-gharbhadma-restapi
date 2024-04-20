@@ -2,8 +2,19 @@ package user
 
 import(
 	"gorm.io/gorm"
-	"github.com/gofiber/fiber/v2"
 	"myapp/code/db"
+	"crypto/rand"
+    "crypto/sha256"
+    "encoding/base64"
+    "errors"
+    "time"
+
+    "github.com/golang-jwt/jwt/v5"
+	"github.com/dgrijalva/jwt-go"
+	jwtware "github.com/gofiber/contrib/jwt"
+    "github.com/gofiber/fiber/v2"
+    "golang.org/x/crypto/bcrypt"
+
 )
 
 type User struct {
@@ -12,7 +23,39 @@ type User struct {
 	LastName string   `json:"lastname"`
 	Email string 	   `json:"email"`
 
+
 }
+
+type Claims struct {
+    UserID uint `json:"user_id"`
+    jwt.StandardClaims
+}
+
+
+
+func generateRandomString(length int) (string, error) {
+	bytes := make([]byte, length)
+	_, err := rand.Read(bytes)
+	if err != nil {
+		return "", err
+	}
+	return base64.URLEncoding.EncodeToString(bytes), nil
+}
+
+// const (
+//     jwtSecret,  err := generateRandomString(length) // Change this to a strong secret key in production
+//     jwtExpiration = time.Hour * 24    // Token expiration time (1 day)
+// )
+
+
+func Signup(c *fiber.Ctx) error{
+	user := new(User)
+
+	if err :=c.BodyParser(user); err!=nil{
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error":err.Error()})
+	}
+}
+
 
 func GetUsers(c *fiber.Ctx) error {
 	var users []User
