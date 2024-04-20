@@ -250,6 +250,130 @@ func RefreshToken(c *fiber.Ctx) error {
 // }
 
 
+type ResetPasswordRequest struct {
+    Email string `json:"email"`
+}
+
+func ResetPasswordRequestHandler(c *fiber.Ctx) error {
+    // Parse the JSON payload from the request body
+    var req ResetPasswordRequest
+    if err := c.BodyParser(&req); err != nil {
+        errMsg := ErrorResponse{Message: "Invalid JSON payload"}
+        return c.Status(fiber.StatusBadRequest).JSON(errMsg)
+    }
+
+    // Check if the user exists in the database
+    var user Credentials
+    if err := db.DB.Where("email = ?", req.Email).First(&user).Error; err != nil {
+        if errors.Is(err, gorm.ErrRecordNotFound) {
+            // User not found
+            errMsg := ErrorResponse{Message: "User not found"}
+            return c.Status(fiber.StatusNotFound).JSON(errMsg)
+        }
+        // Other database errors
+        errMsg := ErrorResponse{Message: "Internal Server Error"}
+        return c.Status(fiber.StatusInternalServerError).JSON(errMsg)
+    }
+
+    // Generate a reset token (you can implement this function)
+    resetToken, err := generateResetToken(req.Email)
+    if err != nil {
+        errMsg := ErrorResponse{Message: "Failed to generate reset token"}
+        return c.Status(fiber.StatusInternalServerError).JSON(errMsg)
+    }
+
+    // Send the reset token to the user via email (implement this function)
+
+    // Return success response
+    return c.JSON(fiber.Map{"message": "Reset token sent successfully","resettoken":resetToken})
+}
+
+
+type ResetPasswordConfirmation struct {
+    Email         string `json:"email"`
+    ResetToken    string `json:"reset_token"`
+    NewPassword   string `json:"new_password"`
+}
+
+func ResetPasswordConfirmationHandler(c *fiber.Ctx) error {
+    // Parse the JSON payload from the request body
+    var req ResetPasswordConfirmation
+    if err := c.BodyParser(&req); err != nil {
+        errMsg := ErrorResponse{Message: "Invalid JSON payload"}
+        return c.Status(fiber.StatusBadRequest).JSON(errMsg)
+    }
+
+    // Validate the reset token (implement this function)
+
+    // Update the user's password in the database
+    hashedPassword, err := hashPassword(req.NewPassword)
+    if err != nil {
+        errMsg := ErrorResponse{Message: "Failed to hash password"}
+        return c.Status(fiber.StatusInternalServerError).JSON(errMsg)
+    }
+
+    if err := db.DB.Model(&Credentials{}).Where("email = ?", req.Email).Update("pass", hashedPassword).Error; err != nil {
+        errMsg := ErrorResponse{Message: "Failed to update password"}
+        return c.Status(fiber.StatusInternalServerError).JSON(errMsg)
+    }
+
+    // Return success response
+    return c.JSON(fiber.Map{"message": "Password reset successfully"})
+}
+
+type ChangePasswordRequest struct {
+    Email        string `json:"email"`
+    OldPassword  string `json:"old_password"`
+    NewPassword  string `json:"new_password"`
+}
+
+func ChangePasswordHandler(c *fiber.Ctx) error {
+    // Parse the JSON payload from the request body
+    var req ChangePasswordRequest
+    if err := c.BodyParser(&req); err != nil {
+        errMsg := ErrorResponse{Message: "Invalid JSON payload"}
+        return c.Status(fiber.StatusBadRequest).JSON(errMsg)
+    }
+
+    // Check if the user exists in the database
+    var user Credentials
+    if err := db.DB.Where("email = ?", req.Email).First(&user).Error; err != nil {
+        if errors.Is(err, gorm.ErrRecordNotFound) {
+            // User not found
+            errMsg := ErrorResponse{Message: "User not found"}
+            return c.Status(fiber.StatusNotFound).JSON(errMsg)
+        }
+        // Other database errors
+        errMsg := ErrorResponse{Message: "Internal Server Error"}
+        return c.Status(fiber.StatusInternalServerError).JSON(errMsg)
+    }
+
+    // Verify the old password
+    if err := bcrypt.CompareHashAndPassword([]byte(user.Pass), []byte(req.OldPassword)); err != nil {
+        // Old password does not match
+        errMsg := ErrorResponse{Message: "Old password is incorrect"}
+        return c.Status(fiber.StatusUnauthorized).JSON(errMsg)
+    }
+
+    // Hash the new password
+    hashedPassword, err := hashPassword(req.NewPassword)
+    if err != nil {
+        errMsg := ErrorResponse{Message: "Failed to hash password"}
+        return c.Status(fiber.StatusInternalServerError).JSON(errMsg)
+    }
+
+    // Update the user's password in the database
+    if err := db.DB.Model(&Credentials{}).Where("email = ?", req.Email).Update("pass", hashedPassword).Error; err != nil {
+        errMsg := ErrorResponse{Message: "Failed to update password"}
+        return c.Status(fiber.StatusInternalServerError).JSON(errMsg)
+    }
+
+    // Return success response
+    return c.JSON(fiber.Map{"message": "Password changed successfully"})
+}
+
+
+
 
 
 

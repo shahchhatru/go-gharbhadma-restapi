@@ -27,11 +27,17 @@ func main() {
 
 	app.Post("/signup",credentials.Signup)
 
+    //reset pass word token
+    app.Post("/resetpasswordtoken",credentials.ResetPasswordConfirmationHandler)
 	
-
+    //reset password
+    app.Post("/resetpassword",credentials.ResetPasswordConfirmation)
+    // change password
+    app.Post("/changepassword",credentials.ChangePasswordHandler)
+	
 	app.Post("/refreshtoken",credentials.RefreshToken)
 
-	// JWT Middleware
+    // JWT Middleware
 	app.Use(jwtware.New(jwtware.Config{
 		SigningKey: jwtware.SigningKey{Key: []byte("secret")},
 	}))
