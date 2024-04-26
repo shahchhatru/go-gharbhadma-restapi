@@ -19,11 +19,10 @@ func InitialMigration() {
 		panic("Cannot connect to Database")
 	}
 
-	// // Ping the database to check connectivity
-	// sqlDB, err := DB.DB()
-	// if err != nil {
-	// 	log.Fatalf("Error getting underlying SQL database: %v", err)
-	// }
+	DB.AutoMigrate(&Credentials{})
+	DB.AutoMigrate(&UserProfile{})
+	DB.AutoMigrate(&Task{})
+	DB.AutoMigrate(&TaskReminder{})
 
 	
 }

@@ -17,7 +17,7 @@ func main() {
 	app := fiber.New()
 
 	db.InitialMigration()
-    db.DB.AutoMigrate(&credentials.Credentials{})
+    //db.DB.AutoMigrate(&credentials.Credentials{})
 
 	// Login route
 	app.Post("/login", credentials.Login)
@@ -28,10 +28,10 @@ func main() {
 	app.Post("/signup",credentials.Signup)
 
     //reset pass word token
-    app.Post("/resetpasswordtoken",credentials.ResetPasswordConfirmationHandler)
+    app.Post("/resetpasswordtoken",credentials.ResetPasswordRequestHandler)
 	
     //reset password
-    app.Post("/resetpassword",credentials.ResetPasswordConfirmation)
+    app.Post("/resetpassword",credentials.ResetPasswordConfirmationHandler)
     // change password
     app.Post("/changepassword",credentials.ChangePasswordHandler)
 	

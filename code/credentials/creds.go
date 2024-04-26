@@ -10,6 +10,9 @@ import(
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 	"encoding/json"
+    "crypto/rand"
+    "encoding/base64"
+    
 )
 
 type Credentials struct {
@@ -101,21 +104,6 @@ func Login(c *fiber.Ctx) error {
 		// Password does not match
 		return c.SendStatus(fiber.StatusUnauthorized)
 	}
-
-	// Password matches, create JWT token
-	// claims := jwt.MapClaims{
-	// 	"name":  user.User,
-	// 	"admin": false, // Example: You can set admin status based on user roles from database
-	// 	"exp":   time.Now().Add(time.Hour * 72).Unix(),
-	// }
-
-	//token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-
-	// Generate encoded token and send it as response
-	// t, err := token.SignedString([]byte("secret"))
-	// if err != nil {
-	// 	return c.SendStatus(fiber.StatusInternalServerError)
-	// }
 
 	// Generate access token
     accessToken, err := generateAccessToken(user.Email)
@@ -235,23 +223,28 @@ func RefreshToken(c *fiber.Ctx) error {
 }
 
 
-
-
-// func accessible(c *fiber.Ctx) error {
-// 	return c.SendString("Accessible ")
-// }
-
-
-// func restricted(c *fiber.Ctx) error {
-// 	user := c.Locals("user").(*jwt.Token)
-// 	claims := user.Claims.(jwt.MapClaims)
-// 	name := claims["name"].(string)
-// 	return c.SendString("Welcome " + name)
-// }
-
-
 type ResetPasswordRequest struct {
     Email string `json:"email"`
+}
+
+// Define the expiration time for reset tokens (e.g., 1 hour)
+const resetTokenExpiration = time.Hour
+
+// GenerateResetToken generates a random reset token
+func generateResetToken(email string) (string, error) {
+    // Generate a random token
+    tokenBytes := make([]byte, 32)
+    _, err := rand.Read(tokenBytes)
+    if err != nil {
+        return "", err
+    }
+    token := base64.StdEncoding.EncodeToString(tokenBytes)
+
+    // You can save the reset token in a database or cache with the associated email
+    // Example: SaveTokenToDatabase(token, email)
+
+    // Return the generated token
+    return token, nil
 }
 
 func ResetPasswordRequestHandler(c *fiber.Ctx) error {
@@ -295,6 +288,37 @@ type ResetPasswordConfirmation struct {
     NewPassword   string `json:"new_password"`
 }
 
+func validateResetToken(email string, resetToken string) error {
+    // Parse the reset token
+    claims := jwt.MapClaims{}
+    token, err := jwt.ParseWithClaims(resetToken, claims, func(token *jwt.Token) (interface{}, error) {
+        return []byte("reset_secret"), nil
+    })
+    if err != nil {
+        return fmt.Errorf("Invalid reset token")
+    }
+
+    // Check if the token is valid
+    if !token.Valid {
+        return fmt.Errorf("Invalid reset token")
+    }
+
+    // Extract the email from the token claims
+    tokenEmail, ok := claims["email"].(string)
+    if !ok {
+        return fmt.Errorf("Invalid reset token")
+    }
+
+    // Compare the token email with the provided email
+    if tokenEmail != email {
+        return fmt.Errorf("Reset token does not match the user's email")
+    }
+
+    // Token is valid and matches the user's email
+    return nil
+}
+
+
 func ResetPasswordConfirmationHandler(c *fiber.Ctx) error {
     // Parse the JSON payload from the request body
     var req ResetPasswordConfirmation
@@ -303,7 +327,11 @@ func ResetPasswordConfirmationHandler(c *fiber.Ctx) error {
         return c.Status(fiber.StatusBadRequest).JSON(errMsg)
     }
 
-    // Validate the reset token (implement this function)
+     // Validate the reset token
+     if err := validateResetToken(req.Email, req.ResetToken); err != nil {
+        errMsg := ErrorResponse{Message: err.Error()}
+        return c.Status(fiber.StatusUnauthorized).JSON(errMsg)
+    }
 
     // Update the user's password in the database
     hashedPassword, err := hashPassword(req.NewPassword)
@@ -371,6 +399,8 @@ func ChangePasswordHandler(c *fiber.Ctx) error {
     // Return success response
     return c.JSON(fiber.Map{"message": "Password changed successfully"})
 }
+
+
 
 
 
