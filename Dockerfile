@@ -19,6 +19,9 @@ RUN go get -u github.com/gofiber/contrib/jwt
 RUN go get -u github.com/golang-jwt/jwt/v5
 RUN go get golang.org/x/crypto/bcrypt
 RUN go get myapp/code/credentials
+RUN go get -u github.com/swaggo/swag/cmd/swag
+RUN go get -u github.com/gofiber/swagger
+
 
 # Expose port 8080 to the outside world
 EXPOSE 8080
